@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgroScan AI — Crop Disease Detection Using Machine Learning</title>
+    <meta name="description" content="Production-ready Crop Disease Detection web application powered by MobileNetV2 Transfer Learning on the PlantVillage dataset." />
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+    <!-- Ambient Botanical Glow Orbs -->
+    <div class="ambient-glow ambient-glow--top" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--bottom" aria-hidden="true"></div>
+
+    <!-- 1. Top Navigation Bar -->
+    <header class="top-navbar">
+        <div class="nav-container">
+            <a href="/" class="brand-logo" aria-label="AgroScan AI Home">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">AgroScan <span class="brand-highlight">AI</span></span>
+                    <span class="brand-subtitle">CropGuard ML • PlantVillage Pathology Engine</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div class="model-status-pill" id="modelStatusPill" title="Transfer Learning Architecture & Readiness">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-text" id="modelStatusText">Model: MobileNetV2 • Ready</span>
+                </div>
+
+                <button type="button" class="btn-how-it-works" id="openHowItWorksBtn" aria-haspopup="dialog" aria-controls="howItWorksModal">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>How It Works</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        <!-- Hero Banner -->
+        <section class="hero-header">
+            <div class="hero-badge">
+                <span class="hero-badge-icon">🌿</span>
+                <span>Deep Learning Phytopathology • 224×224 Normalized RGB Inference</span>
+            </div>
+            <h1 class="hero-title">Precision Crop Disease Detection &amp; Agronomic Advisory</h1>
+            <p class="hero-description">
+                Upload a field leaf image or select a PlantVillage test specimen below. Our transfer-learning <strong>MobileNetV2</strong> neural pipeline identifies foliar pathogens, estimates canopy severity, and prescribes organic &amp; chemical treatments in milliseconds.
+            </p>
+        </section>
+
+        <!-- 2. Interactive 2-Column Split Workspace -->
+        <section class="workspace-grid" aria-label="Diagnostic Workspace">
+            <!-- LEFT PANEL: Smart Upload Zone & Quick Test Samples -->
+            <div class="glass-card upload-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">Leaf Specimen Input</h2>
+                        <p class="panel-subtitle">Drag &amp; drop a high-res leaf photo or test a pre-loaded sample</p>
+                    </div>
+                    <span class="format-badge">PNG • JPG • WEBP &le; 10MB</span>
+                </div>
+
+                <!-- Interactive Drag-and-Drop Zone -->
+                <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload leaf image for disease diagnosis">
+                    <input type="file" id="leafFileInput" accept=".png,.jpg,.jpeg,.webp,.bmp,image/png,image/jpeg,image/webp" hidden />
+
+                    <!-- Default Upload Prompt -->
+                    <div class="dropzone-prompt" id="dropzonePrompt">
+                        <div class="upload-icon-wrapper">
+                            <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3 class="dropzone-heading">Drop leaf image here, or <span class="text-emerald">browse file</span></h3>
+                        <p class="dropzone-hint">Auto-cropped &amp; normalized to <code>224×224</code> tensor for MobileNetV2</p>
+                    </div>
+
+                    <!-- Instant High-Res Leaf Preview -->
+                    <div class="preview-container hidden" id="previewContainer">
+                        <div class="preview-image-frame">
+                            <img id="leafPreviewImg" src="" alt="Selected leaf specimen preview" />
+                            <div class="scan-laser-line hidden" id="scanLaserLine" aria-hidden="true"></div>
+                            <span class="preview-resolution-tag" id="previewFilenameTag">224×224 Tensor Ready</span>
+                        </div>
+                        <div class="preview-actions">
+                            <button type="button" class="btn-secondary" id="removeImageBtn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                </svg>
+                                <span>Remove / Change Image</span>
+                            </button>
+                            <button type="button" class="btn-primary" id="runDiagnosisBtn">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                                <span>Analyze Leaf Specimen</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Error Banner -->
+                <div class="upload-error-banner hidden" id="uploadErrorBanner" role="alert">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span id="uploadErrorText">Invalid file format.</span>
+                </div>
+
+                <!-- Quick Test Sample Leaves Strip -->
+                <div class="sample-leaves-section">
+                    <div class="sample-strip-header">
+                        <span class="sample-strip-title">Quick Test Sample Leaves (One-Click Demo)</span>
+                        <span class="sample-strip-caption">Click any specimen to run instant inference</span>
+                    </div>
+                    <div class="sample-thumbnails-grid" id="sampleThumbnailsGrid">
+                        <button type="button" class="sample-thumb-btn" data-sample="healthy_leaf.jpg" data-label="Healthy Canopy">
+                            <img src="/sample_images/healthy_leaf.jpg" alt="Healthy Leaf sample" loading="lazy" />
+                            <div class="sample-thumb-meta">
+                                <span class="sample-name">Healthy Leaf</span>
+                                <span class="sample-tag tag-healthy">Control</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="sample-thumb-btn" data-sample="early_blight.jpg" data-label="Early Blight">
+                            <img src="/sample_images/early_blight.jpg" alt="Early Blight sample" loading="lazy" />
+                            <div class="sample-thumb-meta">
+                                <span class="sample-name">Early Blight</span>
+                                <span class="sample-tag tag-warning">Fungal</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="sample-thumb-btn" data-sample="late_blight.jpg" data-label="Late Blight">
+                            <img src="/sample_images/late_blight.jpg" alt="Late Blight sample" loading="lazy" />
+                            <div class="sample-thumb-meta">
+                                <span class="sample-name">Late Blight</span>
+                                <span class="sample-tag tag-danger">Oomycete</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="sample-thumb-btn" data-sample="bacterial_spot.jpg" data-label="Bacterial Spot">
+                            <img src="/sample_images/bacterial_spot.jpg" alt="Bacterial Spot sample" loading="lazy" />
+                            <div class="sample-thumb-meta">
+                                <span class="sample-name">Bacterial Spot</span>
+                                <span class="sample-tag tag-warning">Bacterial</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="sample-thumb-btn" data-sample="powdery_mildew.jpg" data-label="Powdery Mildew">
+                            <img src="/sample_images/powdery_mildew.jpg" alt="Powdery Mildew sample" loading="lazy" />
+                            <div class="sample-thumb-meta">
+                                <span class="sample-name">Powdery Mildew</span>
+                                <span class="sample-tag tag-low">Biotrophic</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: AI Diagnostic Dashboard -->
+            <div class="glass-card diagnostic-panel" id="diagnosticPanel">
+                <!-- STATE A: Initial Empty State with 3 Visual Steps -->
+                <div class="diagnostic-empty-state" id="emptyStateView">
+                    <div class="empty-state-badge">AI Diagnostic Dashboard</div>
+                    <h2 class="empty-state-title">Awaiting Leaf Specimen for Neural Analysis</h2>
+                    <p class="empty-state-subtitle">
+                        Upload a field photo or click one of the <strong>Quick Test Sample Leaves</strong> on the left to inspect real-time MobileNetV2 predictions.
+                    </p>
+
+                    <div class="workflow-steps-list">
+                        <div class="workflow-step-card">
+                            <div class="step-number">01</div>
+                            <div class="step-content">
+                                <h3>Upload or Select Leaf Specimen</h3>
+                                <p>High-resolution adaxial or abaxial leaf image is validated and converted to RGB color space.</p>
+                            </div>
+                        </div>
+
+                        <div class="workflow-step-card">
+                            <div class="step-number">02</div>
+                            <div class="step-content">
+                                <h3>AI Feature Extraction (MobileNetV2)</h3>
+                                <p>Resized to <code>224×224</code>, normalized to <code>[0, 1]</code>, and passed through depthwise separable convolutions to detect chlorotic halos, target rings, and mycelia.</p>
+                            </div>
+                        </div>
+
+                        <div class="workflow-step-card">
+                            <div class="step-number">03</div>
+                            <div class="step-content">
+                                <h3>Pathology Diagnosis &amp; Treatment</h3>
+                                <p>Outputs Top-3 softmax probabilities, canopy severity level, and actionable organic &amp; chemical treatment steps.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATE B: Animated Scanning / Loading Skeleton Overlay -->
+                <div class="diagnostic-loading-state hidden" id="loadingStateView" aria-live="polite">
+                    <div class="scanner-pulse-ring">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                        </svg>
+                    </div>
+                    <h3 class="loading-title">Running MobileNetV2 Feature Extraction...</h3>
+                    <p class="loading-subtitle">Normalizing 224×224 RGB tensor &amp; computing softmax probabilities</p>
+
+                    <div class="skeleton-stack">
+                        <div class="skeleton-line skeleton-line--lg"></div>
+                        <div class="skeleton-line skeleton-line--md"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+                </div>
+
+                <!-- STATE C: Diagnosis Result Card -->
+                <div class="diagnostic-result-view hidden" id="resultStateView" aria-live="polite">
+                    <!-- Top Status Row -->
+                    <div class="result-top-bar">
+                        <div class="status-badges-group">
+                            <span class="status-pill-badge" id="resultHealthBadge">Diseased</span>
+                            <span class="severity-pill-badge" id="resultSeverityBadge">Severity: Moderate</span>
+                        </div>
+                        <span class="inference-latency" id="resultLatencyTag">⚡ 14.2 ms</span>
+                    </div>
+
+                    <!-- Disease Title & Botanical Metadata -->
+                    <div class="result-title-block">
+                        <h2 class="disease-main-title" id="resultDiseaseTitle">Early Blight</h2>
+                        <p class="disease-scientific-meta">
+                            <span id="resultScientificName">Alternaria solani</span> •
+                            <span class="meta-hosts" id="resultCropHosts">Hosts: Tomato, Potato</span>
+                        </p>
+                    </div>
+
+                    <!-- Primary Confidence Progress Bar -->
+                    <div class="confidence-meter-box">
+                        <div class="confidence-meter-header">
+                            <span class="confidence-label">Primary Model Confidence</span>
+                            <span class="confidence-value" id="resultConfidenceValue">96.4%</span>
+                        </div>
+                        <div class="confidence-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="primaryConfidenceTrack">
+                            <div class="confidence-bar-fill" id="resultConfidenceFill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top-3 Prediction Breakdown -->
+                    <div class="top3-breakdown-card">
+                        <div class="card-section-header">
+                            <h3>Top-3 Softmax Prediction Breakdown</h3>
+                            <span class="section-caption">PlantVillage Class Probabilities</span>
+                        </div>
+                        <div class="top3-bars-container" id="top3BarsContainer">
+                            <!-- Populated dynamically by static/js/app.js -->
+                        </div>
+                    </div>
+
+                    <!-- Tabbed / Clean Cards for Symptoms & Causes and Recommended Treatment -->
+                    <div class="advisory-tabs-container">
+                        <div class="advisory-tab-buttons" role="tablist" aria-label="Diagnostic Details Tabs">
+                            <button type="button" class="advisory-tab-btn active" role="tab" aria-selected="true" data-tab="treatmentTabPanel" id="tabBtnTreatment">
+                                🛡️ Recommended Treatment
+                            </button>
+                            <button type="button" class="advisory-tab-btn" role="tab" aria-selected="false" data-tab="symptomsTabPanel" id="tabBtnSymptoms">
+                                🔬 Symptoms &amp; Causes
+                            </button>
+                        </div>
+
+                        <!-- TAB 1: Recommended Treatment (Organic & Chemical) -->
+                        <div class="advisory-tab-panel active" id="treatmentTabPanel" role="tabpanel" aria-labelledby="tabBtnTreatment">
+                            <p class="advisory-summary-text" id="treatmentSummaryText"></p>
+                            <div class="treatment-columns">
+                                <div class="treatment-box treatment-box--organic">
+                                    <div class="treatment-box-header">
+                                        <span class="treatment-icon">🌱</span>
+                                        <h4>Organic &amp; Biological Protocol</h4>
+                                    </div>
+                                    <ul class="advisory-bullet-list" id="organicTreatmentList"></ul>
+                                </div>
+
+                                <div class="treatment-box treatment-box--chemical">
+                                    <div class="treatment-box-header">
+                                        <span class="treatment-icon">🧪</span>
+                                        <h4>Chemical &amp; Targeted Fungicide</h4>
+                                    </div>
+                                    <ul class="advisory-bullet-list" id="chemicalTreatmentList"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: Symptoms & Causes -->
+                        <div class="advisory-tab-panel hidden" id="symptomsTabPanel" role="tabpanel" aria-labelledby="tabBtnSymptoms">
+                            <p class="advisory-summary-text" id="symptomsSummaryText"></p>
+                            <div class="treatment-columns">
+                                <div class="treatment-box">
+                                    <div class="treatment-box-header">
+                                        <span class="treatment-icon">🔍</span>
+                                        <h4>Visual Foliar Symptoms</h4>
+                                    </div>
+                                    <ul class="advisory-bullet-list" id="symptomsBulletList"></ul>
+                                </div>
+
+                                <div class="treatment-box">
+                                    <div class="treatment-box-header">
+                                        <span class="treatment-icon">🌦️</span>
+                                        <h4>Pathogen &amp; Environmental Triggers</h4>
+                                    </div>
+                                    <ul class="advisory-bullet-list" id="causesBulletList"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Highlighted Validation Disclaimer Banner -->
+                    <div class="disclaimer-banner" role="note">
+                        <div class="disclaimer-icon" aria-hidden="true">⚠️</div>
+                        <div class="disclaimer-content">
+                            <strong>Agronomic Validation Notice:</strong>
+                            <span id="resultDisclaimerText">Estimate only — validate with an agricultural expert before applying chemical treatments.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Recent Scan History Strip (Session-based) -->
+        <section class="history-section glass-card" aria-label="Recent Scan History">
+            <div class="history-header">
+                <div>
+                    <h2 class="panel-title">Recent Scan History</h2>
+                    <p class="panel-subtitle">Compare leaf specimens analyzed during this session (click any card to restore diagnosis)</p>
+                </div>
+                <button type="button" class="btn-clear-history hidden" id="clearHistoryBtn">Clear Session History</button>
+            </div>
+
+            <div class="history-strip" id="scanHistoryStrip">
+                <div class="history-empty-placeholder" id="historyEmptyPlaceholder">
+                    <span>No scans recorded in this session yet. Test a sample leaf above to populate your comparison strip.</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span><strong>AgroScan AI (CropGuard ML)</strong> — Transfer Learning with MobileNetV2 on PlantVillage Architecture</span>
+            <span class="footer-sep">•</span>
+            <span>Input Tensor: <code>224×224×3</code> Normalized RGB</span>
+        </div>
+    </footer>
+
+    <!-- "How It Works" Modal Dialog -->
+    <div class="modal-backdrop hidden" id="howItWorksModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-glass-card">
+            <div class="modal-header">
+                <div>
+                    <span class="hero-badge">System Architecture</span>
+                    <h2 id="modalTitle" class="modal-title">How AgroScan AI Works</h2>
+                </div>
+                <button type="button" class="modal-close-btn" id="closeHowItWorksBtn" aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="arch-grid">
+                    <div class="arch-step">
+                        <span class="arch-badge">1. Image Preprocessing</span>
+                        <h4>224×224 RGB Normalization</h4>
+                        <p>Uploaded leaf images are validated, converted to 3-channel RGB, bilinearly resized to <code>224×224</code> pixels, and normalized to floating-point tensors in <code>[0.0, 1.0]</code>.</p>
+                    </div>
+                    <div class="arch-step">
+                        <span class="arch-badge">2. Transfer Learning</span>
+                        <h4>MobileNetV2 Feature Backbone</h4>
+                        <p>Uses inverted residual blocks and linear bottlenecks pre-trained on ImageNet and fine-tuned with <code>ImageDataGenerator</code> augmentations on PlantVillage leaf classes.</p>
+                    </div>
+                    <div class="arch-step">
+                        <span class="arch-badge">3. Softmax &amp; Severity</span>
+                        <h4>Multi-Class Pathology Scoring</h4>
+                        <p>Outputs calibrated Top-3 softmax probabilities across <em>Healthy, Early Blight, Late Blight, Bacterial Spot,</em> and <em>Powdery Mildew</em> with canopy lesion area estimation.</p>
+                    </div>
+                    <div class="arch-step">
+                        <span class="arch-badge">4. IPM Decision Support</span>
+                        <h4>Organic &amp; Chemical Protocols</h4>
+                        <p>Maps each diagnosed pathogen to Integrated Pest Management (IPM) treatments, FRAC fungicide rotation guidelines, and mandatory expert validation disclaimers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

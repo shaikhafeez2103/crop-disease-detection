@@ -1,0 +1,18 @@
+AGROSCAN_MOBILENETV2_H5
+{
+  "architecture": "MobileNetV2",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "normalization": "rescale_1_255",
+  "classes": {
+    "Healthy": 0,
+    "Early Blight": 1,
+    "Late Blight": 2,
+    "Bacterial Spot": 3,
+    "Powdery Mildew": 4
+  },
+  "version": "2.1.0-plantvillage-transfer"
+}
